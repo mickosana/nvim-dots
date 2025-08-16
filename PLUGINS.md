@@ -3,167 +3,206 @@
 This document summarizes the plugins configured in your Neovim setup, how to use them, and the important options and shortcuts wired in your config.
 
 ## Notes
-- Leader-based mappings below use your current `\<leader>` (as configured in your options). Some mappings also use `\<Space>` prefixes for Telescope.
-- Some tools (linters, external binaries) must be installed on your system to work (e.g., `flake8`, `shellcheck`, `clang-tidy`, etc.).
+- Leader-based mappings below use your current `<leader>` (as configured in your options).
+- Your configuration includes a comprehensive setup for both development workflows and AI assistance.
 
 ## Plugins
 
-### Colorscheme: folke/tokyonight.nvim
-- Loads on startup with high priority.
-- Options (set via setup):
-  - `style`: `"storm"` (also: `moon`, `night`, `day`)
-  - `transparent`: `false`
-  - `dim_inactive`: `false`
-  - `lualine_bold`: `true`
-  - `plugins.all`: `true` (enable integrations)
+### GitHub Copilot Integration
+
+#### GitHub Copilot: zbirenbaum/copilot.lua
+- Purpose: GitHub Copilot integration for code completion.
+- Status: Suggestions and panel disabled (handled by CopilotChat instead).
 - Commands:
-  - `:colorscheme tokyonight` (applied automatically)
-
-### File Explorer: nvim-neo-tree/neo-tree.nvim (v3.x)
-- Purpose: Sidebar tree showing ONLY the current working directory and its children.
-- Key shortcuts:
-  - `\<C-n>`: toggle Neo-tree on the left (`reveal=true`)
-  - Inside Neo-tree:
-    - `cd`: change root to selected directory
-    - `\<C-h>`: jump back to the current working directory
-- Behavior/options:
-  - `filesystem.bind_to_cwd = true`
-  - `filesystem.cwd_root = true`, `filesystem.no_parent_dir = true`
-  - `follow_current_file.enabled = true`
-  - `hijack_netrw_behavior = "open_current"`
-  - File watcher enabled (libuv)
-- Migrations:
-  - Runs `:Neotree migrations` automatically on `VimEnter` to avoid prompts.
-
-### Fuzzy Finder: nvim-telescope/telescope.nvim
-- Purpose: File search, live grep, buffers, help, etc., limited to current working directory (cwd).
-- Key shortcuts:
-  - `\<Space>ff`: Find files in cwd
-  - `\<Space>fg`: Live grep in cwd
-  - `\<Space>fb`: Buffers
-  - `\<Space>fh`: Help tags
-  - `\<Space>fo`: Recent files in cwd
-  - `\<Space>fs`: Grep word under cursor in cwd
-  - `\<Space>fd`: Workspace diagnostics
-- Defaults:
-  - `sorting_strategy = "ascending"`, prompt on top
-  - Respects `.gitignore` and ignores `node_modules`/`.git` by default
-  - `find_files` and `live_grep` pickers restricted to cwd
-
-### Statusline: nvim-lualine/lualine.nvim
-- Theme: `tokyonight`
-- Sections:
-  - `lualine_a`: `mode`
-  - `lualine_b`: `branch`, `diff`
-  - `lualine_c`: `filename`
-  - `lualine_x`: diagnostics (`nvim_diagnostic`), `encoding`, `fileformat`, `filetype`
-  - `lualine_y`: `progress`
-  - `lualine_z`: `location` + custom character info (`line:col [char]`)
-- Global status enabled; simple separators.
-
-### Markdown Preview: iamcco/markdown-preview.nvim
-- Filetype: `markdown` (lazy-load)
-- Build: `cd app && npm install`
-- Quick commands:
-  - `:MarkdownPreview` to open
-  - `:MarkdownPreviewStop` to close
-  - `:MarkdownPreviewToggle` to toggle
-- Behavior options (high-level): auto-close on buffer close, echo preview URL, etc.
-
-### Treesitter: nvim-treesitter/nvim-treesitter
-- Purpose: Better syntax highlighting and indentation.
-- Build: `:TSUpdate`
-- Enabled modules: `highlight`, `indent`
-- `ensure_installed` includes common languages for web, backend, databases, config, docs, and misc (`html`, `css`, `js`/`ts`/`tsx`/`vue`/`json`, `python`, `lua`, `go`, `rust`, `java`, `c`/`cpp`/`c_sharp`, `php`, `ruby`, `perl`, `bash`, `dockerfile`, `sql`, `graphql`, `yaml`, `toml`, `ini`, `make`, `terraform`, `markdown`/`markdown_inline`, `latex`, `gitignore`, `vim`, `regex`).
-- Useful commands:
-  - `:TSInstall <lang>`
-  - `:TSUninstall <lang>`
-  - `:TSUpdate`
-
-### Linting: mfussenegger/nvim-lint
-- Purpose: Run external linters and show diagnostics.
-- Trigger: Automatically runs on `BufWritePost`; you can also run manually:
-  - `:lua require("lint").try_lint()`
-- Diagnostics display:
-  - Virtual text, signs, underline, float configured in your options (inline feedback near issues).
-- Configured linters by filetype (install these tools system-wide):
-  - `html`: `tidy`
-  - `css`/`scss`: `stylelint`
-  - `javascript`/`typescript`/`tsx`/`vue`/`graphql`: `eslint_d`
-  - `json`: `jsonlint`
-  - `python`: `flake8`
-  - `lua`: `luacheck`
-  - `go`: `golangci_lint`
-  - `rust`: `clippy`
-  - `java`: `checkstyle`
-  - `c`/`cpp`: `clangtidy`
-  - `c_sharp`: `csharpier`
-  - `php`: `phpcs`
-  - `ruby`: `rubocop`
-  - `perl`: `perlcritic`
-  - `bash`: `shellcheck`
-  - `dockerfile`: `hadolint`
-  - `sql`: `sqlfluff`
-  - `yaml`: `yamllint`
-  - `toml`: `taplo`
-  - `ini`: `ini_lint`
-  - `make`: `checkmake`
-  - `terraform`: `tflint`
-  - `markdown`: `markdownlint`
-  - `latex`: `chktex`
-  - `vim`: `vint`
-
-### GitHub Copilot: github/copilot.vim
-- Status: Enabled for all filetypes; Tab mappings disabled (custom accept keys can be added in `options.lua`).
-- Useful commands:
   - `:Copilot setup` to authenticate
   - `:Copilot status` to check connection/user
+- Configuration:
+  - `suggestion.enabled = false`
+  - `panel.enabled = false`
 
-### Copilot Chat: CopilotC-Nvim/CopilotChat.nvim
-- Purpose: Right-side chat panel with coding assistant; supports agent personas and model label in UI.
-- Chat placement: Opens on the right; toggle/close mappings available.
-- Mappings (normal mode):
-  - `\<leader>cc`: Open chat
-  - `\<leader>cct`: Toggle chat
-  - `\<leader>ccr`: Reset chat
-  - `\<leader>ccs`: Stop chat
-  - `\<leader>ccq`: Quick chat (prompt)
-  - `\<leader>ccA`: Choose agent; opens/replaces chat on the right
-  - `\<leader>ccM`: Choose model label (UI only); updates title and answer header
-- Visual mode mappings:
-  - `\<leader>cce`: Explain selection
-  - `\<leader>ccf`: Fix selection
-  - `\<leader>cco`: Optimize selection
-  - `\<leader>ccd`: Document selection
-- Agent & model selection (custom wiring):
-  - Agents (letter shortcuts): `g=General`, `r=Refactor`, `b=BugFix`, `d=Docs`, `t=Tests`
-  - Models (letter shortcuts, UI labels): `g=GPT-5`, `s=Claude 3.7 Sonnet`, `c=Claude 4`
-  - Window title winbar shows: `Copilot Chat | Agent: <name> | Model: <label>`
-  - Copilot answer header shows: `## Copilot (<label>)`
-  - Note: CopilotChat.nvim doesn’t expose provider model switching in this config; the model chooser updates UI labels/context.
-- User label:
-  - The `question_header` displays your local system username.
+#### Copilot Chat: CopilotC-Nvim/CopilotChat.nvim
+- Purpose: Advanced AI chat interface with multiple modes and model selection.
+- Dependencies: `zbirenbaum/copilot.lua`, `nvim-lua/plenary.nvim`
+- Configuration:
+  - Default model: `gpt-4o`
+  - Window layout: vertical, 50% width
+  - Context: buffer (automatically includes current buffer)
 
-## Global/editor shortcuts and behavior
+##### Available Models
+- `gpt-4o` (Default)
+- `claude-3.5-sonnet`
+- `claude-3.7-sonnet` 
+- `claude-4-sonnet`
+- `gemini-2.5-pro`
+- `o3-mini`
 
-### Terminal toggle
-- ``\<C-`>``: Toggle a terminal in a bottom horizontal split; automatically enters insert mode; `\<Esc>` exits terminal mode.
+##### Key Mappings
 
-### Diagnostics (LSP and nvim-lint)
-- `\<leader>e`: Show error popup at cursor
-- `[d` / `]d`: Previous/next diagnostic
-- `\<leader>q`: Open diagnostics list
-- Inline diagnostics are enabled (`virtual_text`, `signs`, `underline`).
+**Normal Mode:**
+- `<leader>cc`: **Ask Mode** - Read-only chat with full buffer context, provides suggestions and analysis
+- `<leader>cca`: **Agent Mode** - Ask with file manipulation capabilities (includes model selection)
+- `<leader>cce`: **Agent Mode** - Edit current buffer with AI assistance (includes model selection)
+- `<leader>cm`: Select AI model
 
-### Split navigation and resizing (built-in Vim controls)
-- Move focus: `\<C-w> h/j/k/l`
-- Cycle: `\<C-w> w`; previous: `\<C-w> p`
-- Resize: `\<C-w> >` / `\<C-w> <` (width), `\<C-w> +` / `\<C-w> -` (height)
-- Maximize: `\<C-w> |` (width), `\<C-w> _` (height)
-- Equalize: `\<C-w> =`
+**Visual Mode:**
+- `<leader>cc`: Ask about selected code (read-only mode)
+- `<leader>cca`: Agent ask about selection (with file manipulation capabilities)
+
+##### Chat Modes
+
+**Ask Mode (`<leader>cc`)**
+- **Purpose**: Read-only analysis and suggestions
+- **Features**: 
+  - Can see entire buffer content
+  - Provides suggestions, analysis, and recommendations
+  - No file modification capabilities
+  - No model selection (uses default)
+  - Contextual suggestions based on your code
+
+**Agent Mode (`<leader>cca`, `<leader>cce`)**
+- **Purpose**: Interactive file editing and manipulation
+- **Features**:
+  - Model selection dialog
+  - Can modify files directly
+  - Advanced action menu with options:
+    - ✅ Apply changes
+    - ❌ Cancel
+    - 🔍 Show diff preview (git-style)
+    - ✏️ Edit prompt and retry
+  - Professional diff preview with complete file comparison
+  - Aggressive metadata stripping for clean code output
+
+##### Commands
+- `:CopilotChat` - Open ask mode chat
+- `:CopilotChatAsk [prompt]` - Ask mode with optional prompt
+- `:CopilotEditBuffer [prompt]` - Agent mode buffer editing
+- `:CopilotAgentAsk [prompt]` - Agent mode asking
+- `:CopilotModel` - Select AI model
+
+### File Navigation and Project Management
+
+#### Neo-tree: nvim-neo-tree/neo-tree.nvim
+- Purpose: File explorer and project management
+- Dependencies: `plenary.nvim`, `nui.nvim`, `nvim-web-devicons`
+- Key Features:
+  - Position: Left side of the screen with 30 column width
+  - Git status integration enabled
+  - Diagnostics integration enabled
+  - Case-sensitive file/directory sorting
+  - Current file following enabled
+  - Dotfiles and gitignored files visible
+  - OS-level file watcher enabled for real-time updates
+  - Binds to current working directory
+
+#### Telescope: nvim-telescope/telescope.nvim
+- Purpose: Fuzzy finder for files, buffers, and text patterns
+- Dependencies: `plenary.nvim`
+- Custom Functions:
+  - Context-aware searches that use current buffer's directory
+  - Directory-scoped file finding and text searches
+- Key Mappings:
+  - `<leader>ff`: Find files in current buffer's directory
+  - `<leader>fg`: Live grep in current buffer's directory
+  - `<leader>fs`: Grep current word in buffer's directory
+  - `<leader>fF`: Find files globally (workspace-wide)
+
+### Code Enhancement
+
+#### Treesitter: nvim-treesitter/nvim-treesitter
+- Purpose: Advanced syntax highlighting and code navigation
+- Configuration:
+  - Syntax highlighting and indentation enabled
+  - Extensive language support (40+ languages) including:
+    - Web: HTML, CSS, JavaScript, TypeScript, Vue, etc.
+    - Backend: Python, Go, Rust, Java, C/C++, etc.
+    - Database: SQL, GraphQL
+    - Config/DevOps: YAML, TOML, Terraform, etc.
+    - Documentation: Markdown, LaTeX
+
+#### Rainbow Delimiters: HiPhish/rainbow-delimiters.nvim
+- Purpose: Color-coded bracket and delimiter highlighting
+- Configuration:
+  - Global strategy for most file types
+  - Local strategy for Vim files
+  - Custom rainbow blocks for Lua
+  - 7-color palette for different nesting levels
+
+#### Linting: mfussenegger/nvim-lint
+- Purpose: Integrated code linting
+- Configuration:
+  - Runs on file save
+  - Language-specific linters configured:
+    - Web: eslint_d, stylelint, jsonlint
+    - Backend: flake8, luacheck, golangci_lint, clippy, etc.
+    - DevOps: yamllint, hadolint, tflint
+    - Documentation: markdownlint, chktex
+
+### UI and Appearance
+
+#### Tokyo Night Theme: folke/tokyonight.nvim
+- Purpose: Modern, clean color scheme
+- Configuration:
+  - Style: "storm" variant (from options: storm, moon, night, day)
+  - Non-transparent background
+  - Bold headers in status line
+  - Full plugin integration support
+
+#### Lualine: nvim-lualine/lualine.nvim
+- Purpose: Enhanced status line
+- Dependencies: `nvim-web-devicons`
+- Features:
+  - Tokyo Night theme integration
+  - Minimalist separators
+  - Global status line
+  - Git integration (branch, changes)
+  - Diagnostics display with icons
+  - File information (encoding, format, type)
+  - Cursor position with character code display
+
+## Usage Examples
+
+### Copilot AI Assistant
+
+#### Basic Ask Mode
+1. Open any file with code
+2. Press `<leader>cc`
+3. Ask questions like:
+   - "How can I improve this code?"
+   - "Are there any bugs or issues?"
+   - "Explain what this function does"
+   - "Suggest optimizations"
+
+#### Agent Mode for Editing
+1. Open any file you want to modify
+2. Press `<leader>cce`
+3. Select your preferred AI model
+4. Describe the changes you want
+5. Review the diff preview
+6. Apply or refine the changes
+
+### File Navigation
+1. Use Neo-tree (`<leader>e` or `:Neotree`) for file browser
+2. Use Telescope:
+   - `<leader>ff` to find files in current directory
+   - `<leader>fg` to search text in current directory
+   - `<leader>fs` to find occurrences of current word
+
+### Code Quality
+1. Treesitter provides automatic syntax highlighting
+2. Rainbow delimiters help visualize nested code blocks
+3. Linters run automatically on file save, showing errors and warnings
+4. Tokyo Night theme provides a consistent, eye-friendly color palette
 
 ## Troubleshooting
-- Linters not running: Ensure the external linters are installed and in `PATH`. Run `:lua require("lint").try_lint()` and check `:messages`.
-- Copilot not authenticated: Run `:Copilot setup`, then `:Copilot status`. The chat title and headers will reflect your configured agent/model and your local username.
-- Neo-tree shows wrong root: Press `\<C-h>` inside Neo-tree to return to cwd. The tree is configured to bind to cwd and hide parents.
-- Telescope scope: All file/grep pickers are restricted to the current working directory by default in this setup.
+
+### Copilot Issues
+- **Copilot not authenticated**: Run `:Copilot setup`, then `:Copilot status`
+- **Empty responses**: Check your internet connection and Copilot authentication
+- **Model selection not working**: Ensure you're using agent mode (`<leader>cca` or `<leader>cce`)
+- **Changes not applying**: Review the action menu options and ensure you select "Apply changes"
+
+### Plugin Problems
+- **Neo-tree not showing files**: Check for permission issues or try `:Neotree refresh`
+- **Telescope not finding files**: Ensure you're in a project directory with readable files
+- **Treesitter highlighting issues**: Run `:TSUpdate` to update parsers
+- **Linter not working**: Verify the linter is installed on your system (e.g., `eslint`, `flake8`)
