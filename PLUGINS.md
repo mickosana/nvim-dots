@@ -4,6 +4,7 @@ This document summarizes the plugins configured in your Neovim setup, how to use
 
 ## Notes
 - Leader-based mappings below use your current `<leader>` (as configured in your options).
+- 
 - Your configuration includes a comprehensive setup for both development workflows and AI assistance.
 
 ## Plugins

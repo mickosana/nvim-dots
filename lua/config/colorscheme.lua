@@ -1,5 +1,21 @@
 -- Configuration for the colorscheme
--- The actual setup is handled in the plugin configuration (lua/plugins/tokyonight.lua)
--- This file is loaded by lazy.nvim through config/lazy.lua
+local M = {}
 
-vim.cmd.colorscheme("tokyonight")
+function M.init()
+  -- Set up any color-related vim options
+  vim.opt.termguicolors = true
+
+  -- Protected call to load the colorscheme
+  local status_ok = pcall(function()
+    vim.opt.background = 'dark'
+    vim.cmd.colorscheme('tokyonight')
+  end)
+
+  if not status_ok then
+    -- Fallback to a basic colorscheme if tokyonight fails to load
+    vim.cmd.colorscheme('habamax')
+    vim.notify("Failed to load tokyonight theme, using fallback", vim.log.levels.WARN)
+  end
+end
+
+return M

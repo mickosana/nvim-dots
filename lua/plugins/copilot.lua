@@ -1,3 +1,55 @@
+-- Helper functions
+local function clean_response_content(text)
+  if not text or text == "" then
+    return ""
+  end
+
+  local content = text
+
+  -- Remove code block wrappers
+  content = content:gsub("```[%w%-_]*\n(.-)\n```", "%1")
+  content = content:gsub("^%s*```[%w%-_]*%s*\n?", "")
+  content = content:gsub("\n?```%s*$", "")
+
+  local lines = vim.split(content, "\n", { plain = true })
+  local clean_lines = {}
+  local started = false
+
+  for _, line in ipairs(lines) do
+    local trimmed = vim.trim(line)
+
+    -- Skip metadata patterns
+    local is_metadata = (
+      trimmed:match("^[Ff]ile%s*[:=]") or
+      trimmed:match("^[Pp]ath%s*[:=]") or
+      trimmed:match("^[Ff]ilepath%s*[:=]") or
+      trimmed:match("^[Tt]ext%s*[:=]") or
+      trimmed:match("^[Ss]ource%s*[:=]") or
+      trimmed:match("^[Cc]ontent%s*[:=]") or
+      trimmed:match("^%w+%s*[:=]%s*[%w/._%-]+$") or -- key=value pairs
+      trimmed:match("^[%w/._%-]+%.[%w]+$") and not trimmed:match("%s") or -- standalone filenames
+      trimmed:match("^%-%-%-+") or -- separator lines
+      trimmed:match("^===+") or
+      (trimmed == "" and not started) -- leading empty lines
+    )
+
+    if not is_metadata then
+      started = true
+      table.insert(clean_lines, line)
+    elseif started and trimmed == "" then
+      -- Keep empty lines after content starts
+      table.insert(clean_lines, line)
+    end
+  end
+
+  -- Remove trailing empty lines
+  while #clean_lines > 0 and vim.trim(clean_lines[#clean_lines]) == "" do
+    table.remove(clean_lines)
+  end
+
+  return table.concat(clean_lines, "\n")
+end
+
 return {
   {
     "zbirenbaum/copilot.lua",
@@ -185,56 +237,34 @@ return {
         return context
       end
 
-      -- Aggressive metadata stripping function
-      local function clean_response_content(text)
-        if not text or text == "" then
+      -- Function to get diagnostics for the current buffer
+      local function get_buffer_diagnostics(bufnr)
+        local diagnostics = vim.diagnostic.get(bufnr)
+        local formatted_diagnostics = {}
+
+        for _, diagnostic in ipairs(diagnostics) do
+          table.insert(formatted_diagnostics, {
+            line = diagnostic.lnum + 1,  -- Convert to 1-based line numbers
+            message = diagnostic.message,
+            severity = diagnostic.severity
+          })
+        end
+
+        return formatted_diagnostics
+      end
+
+      -- Function to format diagnostics for the prompt
+      local function format_diagnostics_prompt(diagnostics)
+        if #diagnostics == 0 then
           return ""
         end
 
-        local content = text
-
-        -- Remove code block wrappers
-        content = content:gsub("```[%w%-_]*\n(.-)\n```", "%1")
-        content = content:gsub("^%s*```[%w%-_]*%s*\n?", "")
-        content = content:gsub("\n?```%s*$", "")
-
-        local lines = vim.split(content, "\n", { plain = true })
-        local clean_lines = {}
-        local started = false
-
-        for _, line in ipairs(lines) do
-          local trimmed = vim.trim(line)
-
-          -- Skip metadata patterns
-          local is_metadata = (
-            trimmed:match("^[Ff]ile%s*[:=]") or
-            trimmed:match("^[Pp]ath%s*[:=]") or
-            trimmed:match("^[Ff]ilepath%s*[:=]") or
-            trimmed:match("^[Tt]ext%s*[:=]") or
-            trimmed:match("^[Ss]ource%s*[:=]") or
-            trimmed:match("^[Cc]ontent%s*[:=]") or
-            trimmed:match("^%w+%s*[:=]%s*[%w/._%-]+$") or -- key=value pairs
-            trimmed:match("^[%w/._%-]+%.[%w]+$") and not trimmed:match("%s") or -- standalone filenames
-            trimmed:match("^%-%-%-+") or -- separator lines
-            trimmed:match("^===+") or
-            (trimmed == "" and not started) -- leading empty lines
-          )
-
-          if not is_metadata then
-            started = true
-            table.insert(clean_lines, line)
-          elseif started and trimmed == "" then
-            -- Keep empty lines after content starts
-            table.insert(clean_lines, line)
-          end
+        local lines = {"\nCurrent diagnostic issues to fix:"}
+        for _, diag in ipairs(diagnostics) do
+          local severity = vim.diagnostic.severity[diag.severity] or "INFO"
+          table.insert(lines, string.format("Line %d [%s]: %s", diag.line, severity, diag.message))
         end
-
-        -- Remove trailing empty lines
-        while #clean_lines > 0 and vim.trim(clean_lines[#clean_lines]) == "" do
-          table.remove(clean_lines)
-        end
-
-        return table.concat(clean_lines, "\n")
+        return table.concat(lines, "\n")
       end
 
       -- Action menu for handling changes
@@ -422,6 +452,8 @@ Return ONLY the complete modified code, no metadata or file paths.]], buffer_con
 
           local current_content = table.concat(vim.api.nvim_buf_get_lines(bufnr, 0, -1, false), "\n")
           local buffer_context = get_buffer_context()
+          local diagnostics = get_buffer_diagnostics(bufnr)
+          local diagnostics_prompt = format_diagnostics_prompt(diagnostics)
 
           local prompt = vim.trim(cmd_opts.args or "")
           if prompt == "" then
@@ -432,13 +464,15 @@ Return ONLY the complete modified code, no metadata or file paths.]], buffer_con
             end
           end
 
-          -- Enhanced agent prompt with context
+          -- Enhanced agent prompt with context and diagnostics
           local edit_prompt = string.format([[%s
 
-AGENT MODE: You can modify files directly. Apply the following changes to the code:
+AGENT MODE: You can modify files directly. Apply the following changes to the code and ensure to fix any linting/diagnostic issues.%s
+
+User requested changes:
 %s
 
-Return ONLY the complete modified code, no metadata or file paths.]], buffer_context, prompt)
+Return ONLY the complete modified code, no metadata or file paths. Ensure the changes fix both the user's request and any diagnostic issues.]], buffer_context, diagnostics_prompt, prompt)
 
           vim.notify("🤖 Agent processing changes with " .. current_model .. "...", vim.log.levels.INFO)
 
@@ -463,6 +497,29 @@ Return ONLY the complete modified code, no metadata or file paths.]], buffer_con
                   return
                 end
 
+                -- Modified action menu to include diagnostic validation
+                local function check_remaining_diagnostics(new_content, bufnr)
+                  -- Apply changes temporarily to a new buffer to check diagnostics
+                  local temp_bufnr = vim.api.nvim_create_buf(false, true)
+                  local new_lines = vim.split(new_content, "\n", { plain = true })
+                  vim.api.nvim_buf_set_lines(temp_bufnr, 0, -1, false, new_lines)
+
+                  -- Copy over file type and other relevant settings
+                  vim.api.nvim_buf_set_option(temp_bufnr, "filetype",
+                    vim.api.nvim_buf_get_option(bufnr, "filetype"))
+
+                  -- Wait briefly for diagnostics to be generated
+                  vim.defer_fn(function()
+                    local new_diagnostics = get_buffer_diagnostics(temp_bufnr)
+                    vim.api.nvim_buf_delete(temp_bufnr, { force = true })
+
+                    if #new_diagnostics > 0 then
+                      return new_diagnostics
+                    end
+                    return nil
+                  end, 100)
+                end
+
                 show_action_menu(current_content, cleaned_content, bufnr, prompt)
               end)
             end,
@@ -472,7 +529,7 @@ Return ONLY the complete modified code, no metadata or file paths.]], buffer_con
         select_model(do_edit)
       end, {
         nargs = "?",
-        desc = "Agent mode - Edit current buffer with Copilot"
+        desc = "Agent mode - Edit current buffer with Copilot (includes diagnostic fixes)"
       })
 
       -- Agent mode ask command with model selection
