@@ -13,11 +13,13 @@ vim.opt.cursorline = true
 vim.opt.updatetime = 250
 vim.opt.splitright = true
 
--- Toggle Neo-tree on the left
-vim.keymap.set('n', '<C-n>', ':Neotree toggle left reveal=true<CR>', { noremap = true, silent = true })
+-- Toggle Neo-tree on the left, always rooted at current working directory
+vim.keymap.set('n', '<C-n>', function()
+  vim.cmd('Neotree toggle left reveal=false dir=' .. vim.fn.getcwd())
+end, { noremap = true, silent = true, desc = "Toggle Neo-tree at CWD" })
 
--- Terminal toggle with Ctrl+`
-vim.keymap.set("n", "<C-`>", function()
+-- Terminal toggle with Ctrl+\
+vim.keymap.set("n", "<C-\\>", function()
     local term_bufs = {}
     for _, buf in ipairs(vim.api.nvim_list_bufs()) do
         if vim.bo[buf].buftype == "terminal" then
@@ -38,6 +40,26 @@ end, { desc = "Toggle terminal", noremap = true, silent = true })
 
 -- Terminal keymaps - allow using Esc to exit terminal mode
 vim.keymap.set("t", "<Esc>", "<C-\\><C-n>", { noremap = true, silent = true })
+
+-- Window navigation - move between splits easily with Alt+hjkl
+vim.keymap.set("n", "<A-h>", "<C-w>h", { desc = "Move to left window", noremap = true, silent = true })
+vim.keymap.set("n", "<A-j>", "<C-w>j", { desc = "Move to bottom window", noremap = true, silent = true })
+vim.keymap.set("n", "<A-k>", "<C-w>k", { desc = "Move to top window", noremap = true, silent = true })
+vim.keymap.set("n", "<A-l>", "<C-w>l", { desc = "Move to right window", noremap = true, silent = true })
+
+-- Window navigation from terminal mode with Alt+hjkl
+vim.keymap.set("t", "<A-h>", "<C-\\><C-n><C-w>h", { desc = "Move to left window from terminal", noremap = true, silent = true })
+vim.keymap.set("t", "<A-j>", "<C-\\><C-n><C-w>j", { desc = "Move to bottom window from terminal", noremap = true, silent = true })
+vim.keymap.set("t", "<A-k>", "<C-\\><C-n><C-w>k", { desc = "Move to top window from terminal", noremap = true, silent = true })
+vim.keymap.set("t", "<A-l>", "<C-\\><C-n><C-w>l", { desc = "Move to right window from terminal", noremap = true, silent = true })
+
+-- Cycle through windows with Tab in normal mode
+vim.keymap.set("n", "<leader>w", "<C-w>w", { desc = "Cycle to next window", noremap = true, silent = true })
+vim.keymap.set("t", "<leader>w", "<C-\\><C-n><C-w>w", { desc = "Cycle to next window from terminal", noremap = true, silent = true })
+
+-- Buffer navigation - move between tabs/buffers
+vim.keymap.set("n", "<S-l>", ":bnext<CR>", { desc = "Next buffer", noremap = true, silent = true })
+vim.keymap.set("n", "<S-h>", ":bprevious<CR>", { desc = "Previous buffer", noremap = true, silent = true })
 
 -- Diagnostic keymaps
 vim.keymap.set('n', '<leader>e', vim.diagnostic.open_float, { desc = "Show diagnostic error messages" })
@@ -67,29 +89,6 @@ vim.cmd [[
   autocmd CursorHold * lua vim.diagnostic.open_float(nil, {focus=false, scope="cursor"})
 ]]
 
--- Copilot Chat keymaps
-vim.keymap.set('n', '<leader>cc', '<cmd>CopilotChat<cr>', { desc = "Open Copilot Chat" })
-vim.keymap.set('n', '<leader>ccq', function()
-  local input = vim.fn.input("Quick Chat: ")
-  if input ~= "" then
-    vim.cmd("CopilotChat " .. input)
-  end
-end, { desc = "Quick Chat" })
-vim.keymap.set('n', '<leader>cca', function()
-  local input = vim.fn.input("Agent Mode - Describe changes: ")
-  if input ~= "" then
-    vim.cmd("CopilotChat " .. input .. " - Please provide complete corrected code for direct application")
-  end
-end, { desc = "Agent Mode - Direct Changes" })
-vim.keymap.set('n', '<leader>ccA', '<cmd>CopilotChatAgent<cr>', { desc = "Choose Copilot agent (chat on right)" })
-vim.keymap.set('n', '<leader>ccM', '<cmd>CopilotChatModel<cr>', { desc = "Choose Copilot model (shortcuts/menu)" })
-vim.keymap.set('n', '<leader>cct', '<cmd>CopilotChatToggle<cr>', { desc = "Toggle Copilot Chat" })
-vim.keymap.set('n', '<leader>ccr', '<cmd>CopilotChatReset<cr>', { desc = "Reset Copilot Chat" })
-vim.keymap.set('n', '<leader>ccs', '<cmd>CopilotChatStop<cr>', { desc = "Stop Copilot Chat" })
-vim.keymap.set('n', '<leader>cce', '<cmd>CopilotEditBuffer<cr>', { desc = "Explain selected code" })
-vim.keymap.set('x', '<leader>ccf', '<cmd>CopilotChatFix<cr>', { desc = "Fix selected code" })
-vim.keymap.set('x', '<leader>cco', '<cmd>CopilotChatOptimize<cr>', { desc = "Optimize selected code" })
-vim.keymap.set('x', '<leader>ccd', '<cmd>CopilotChatDocs<cr>', { desc = "Document selected code" })
-vim.keymap.set('n', '<leader>cceA','<cmd>CopilotEditBuffer<cr>',{desc ="edit a file directly from agent"})
 --Set default font
 vim.opt.guifont = { "JetBrainsMonoNL Nerd Font Prop", ":h13" }
+

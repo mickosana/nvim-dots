@@ -24,7 +24,7 @@ return {
       },
       filesystem = {
         follow_current_file = {
-          enabled = true, -- enable to follow the current file
+          enabled = false, -- Disable to prevent Neo-tree from navigating away from CWD
         },
         hijack_netrw_behavior = "open_current",
         use_libuv_file_watcher = true, -- This will use the OS level file watchers to detect changes
@@ -32,11 +32,14 @@ return {
           visible = false, -- when true, they will just be displayed differently than normal items
           hide_dotfiles = false,
           hide_gitignored = false,
+          hide_by_name = {
+            "..",  -- Hide parent directory entry
+          },
         },
-        bind_to_cwd = true, -- changed back to true to show only current working directory
+        bind_to_cwd = true, -- bind to current working directory
         cwd_target = {
-          sidebar = "tab", -- sidebar is the tree on the side
-          current = "window" -- current is the content of the buffer
+          sidebar = "window", -- use window to bind to current working directory
+          current = "window"
         },
         find_by_full_path_words = false,
         group_empty_dirs = false, -- when true, empty folders will be grouped together
@@ -49,30 +52,18 @@ return {
         },
         window = {
           mappings = {
-            ["cd"] = {
-              command = function(state)
-                local node = state.tree:get_node()
-                if node.type == "directory" then
-                  require("neo-tree.sources.filesystem").navigate(state, nil, node.path)
-                end
-              end,
-              desc = "CD into directory",
-            },
-            ["<C-h>"] = {
-              command = function(state)
-                require("neo-tree.sources.filesystem").navigate(state, vim.fn.getcwd())
-              end,
-              desc = "Return to current working directory",
-            },
+            ["<bs>"] = "none", -- Disable navigate up to prevent going to parent directories
+            ["."] = "none", -- Disable set_root to prevent changing root
+            ["H"] = "toggle_hidden",
+            ["/"] = "fuzzy_finder",
+            ["D"] = "fuzzy_finder_directory",
+            ["#"] = "fuzzy_sorter",
+            ["f"] = "filter_on_submit",
+            ["<c-x>"] = "clear_filter",
+            ["[g"] = "prev_git_modified",
+            ["]g"] = "next_git_modified",
           },
         },
-        -- Only show the current directory, remove parent directories
-        discovery = {
-          max_depth = 10, -- Allow showing children to reasonable depth
-        },
-        -- Force the root directory to always be the CWD
-        cwd_root = true, -- Critical setting to only show CWD
-        no_parent_dir = true, -- Don't show parent directories
       },
       default_component_configs = {
         container = {
@@ -120,6 +111,7 @@ return {
     config = function(_, opts)
       -- Run Neo-tree migrations before setup to avoid warnings
       require("neo-tree").setup(opts)
+      
       -- Apply migrations automatically
       vim.api.nvim_create_autocmd("VimEnter", {
         callback = function()
@@ -129,6 +121,11 @@ return {
         end,
         once = true,
       })
+      
+      -- Override Neo-tree commands to always use CWD
+      vim.api.nvim_create_user_command('NeotreeCWD', function()
+        vim.cmd('Neotree reveal=false dir=' .. vim.fn.getcwd())
+      end, {})
     end,
   },
 }
