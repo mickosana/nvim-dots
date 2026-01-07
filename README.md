@@ -32,16 +32,6 @@ A modern Neovim configuration with AI assistance, comprehensive linting, and bea
 
 3. **C Compiler** (for Tree-sitter parser compilation)
    ```bash
-   # Ubuntu/Debian
-   sudo apt install build-essential
-   
-   # Fedora/RHEL
-   sudo dnf install gcc gcc-c++ make
-   
-   # macOS (Xcode Command Line Tools)
-   xcode-select --install
-   
-   # Arch Linux
    sudo pacman -S base-devel
    ```
 
@@ -49,44 +39,16 @@ A modern Neovim configuration with AI assistance, comprehensive linting, and bea
 
 4. **Ripgrep** (for faster Telescope searching)
    ```bash
-   # Ubuntu/Debian
-   sudo apt install ripgrep
-   
-   # Fedora/RHEL
-   sudo dnf install ripgrep
-   
-   # macOS
-   brew install ripgrep
-   
-   # Arch Linux
    sudo pacman -S ripgrep
    ```
 
 5. **fd** (for faster file finding)
    ```bash
-   # Ubuntu/Debian
-   sudo apt install fd-find
-   
-   # Fedora/RHEL
-   sudo dnf install fd-find
-   
-   # macOS
-   brew install fd
-   
-   # Arch Linux
    sudo pacman -S fd
    ```
 
 6. **Node.js** (for JavaScript-based linters)
    ```bash
-   # Ubuntu/Debian
-   curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-   sudo apt install nodejs
-   
-   # macOS
-   brew install node
-   
-   # Arch Linux
    sudo pacman -S nodejs npm
    ```
 
@@ -158,8 +120,7 @@ This configuration includes linting support for many languages. Install the lint
 
 ```bash
 # HTML
-sudo apt install tidy  # Ubuntu/Debian
-brew install tidy-html5  # macOS
+sudo pacman -S tidy
 
 # CSS/SCSS
 npm install -g stylelint stylelint-config-standard
@@ -183,14 +144,7 @@ pipx install flake8
 ### Lua
 
 ```bash
-# Ubuntu/Debian
-sudo apt install lua-check
-
-# macOS
-brew install luacheck
-
-# Using luarocks
-luarocks install luacheck
+sudo pacman -S luacheck
 ```
 
 ### Go
@@ -209,24 +163,13 @@ rustup component add clippy
 ### Shell Scripts
 
 ```bash
-# Ubuntu/Debian
-sudo apt install shellcheck
-
-# macOS
-brew install shellcheck
-
-# Arch Linux
 sudo pacman -S shellcheck
 ```
 
 ### Docker
 
 ```bash
-# Ubuntu/Debian
-sudo apt install hadolint
-
-# macOS
-brew install hadolint
+sudo pacman -S hadolint
 ```
 
 ### YAML
@@ -317,29 +260,29 @@ The configuration includes linting support for these languages:
 
 | Language | Linter | Install Command |
 |----------|--------|-----------------|
-| HTML | tidy | `apt install tidy` / `brew install tidy-html5` |
+| HTML | tidy | `sudo pacman -S tidy` |
 | CSS/SCSS | stylelint | `npm install -g stylelint` |
 | JavaScript/TypeScript | eslint_d | `npm install -g eslint_d` |
 | JSON | jsonlint | `npm install -g jsonlint` |
 | Python | flake8 | `pip install flake8` |
-| Lua | luacheck | `apt install lua-check` / `brew install luacheck` |
+| Lua | luacheck | `sudo pacman -S luacheck` |
 | Go | golangci_lint | `go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest` |
 | Rust | clippy | `rustup component add clippy` |
 | Java | checkstyle | Download from [checkstyle.org](https://checkstyle.org/) |
-| C/C++ | clangtidy | `apt install clang-tidy` / `brew install llvm` |
+| C/C++ | clangtidy | `sudo pacman -S clang-tools-extra` |
 | C# | csharpier | `dotnet tool install -g csharpier` |
 | PHP | phpcs | `composer global require squizlabs/php_codesniffer` |
 | Ruby | rubocop | `gem install rubocop` |
 | Perl | perlcritic | `cpan Perl::Critic` |
-| Bash | shellcheck | `apt install shellcheck` / `brew install shellcheck` |
-| Dockerfile | hadolint | `apt install hadolint` / `brew install hadolint` |
+| Bash | shellcheck | `sudo pacman -S shellcheck` |
+| Dockerfile | hadolint | `sudo pacman -S hadolint` |
 | SQL | sqlfluff | `pip install sqlfluff` |
 | YAML | yamllint | `pip install yamllint` |
 | TOML | taplo | `cargo install taplo-cli` |
 | Makefile | checkmake | `go install github.com/mrtazz/checkmake/cmd/checkmake@latest` |
 | Terraform | tflint | `curl -s https://raw.githubusercontent.com/terraform-linters/tflint/master/install_linux.sh | bash` |
 | Markdown | markdownlint | `npm install -g markdownlint-cli` |
-| LaTeX | chktex | `apt install chktex` / `brew install chktex` |
+| LaTeX | chktex | `sudo pacman -S chktex` |
 | Vim script | vint | `pip install vim-vint` |
 | Vue.js | eslint_d | `npm install -g eslint_d` |
 | GraphQL | eslint_d | `npm install -g eslint_d` |
@@ -479,6 +422,134 @@ mv ~/.config/nvim.backup ~/.config/nvim
 ## Contributing
 
 Feel free to open issues or submit pull requests to improve this configuration.
+
+---
+
+## Health Check & Diagnostics
+
+### Running Health Check
+
+To check the status of your Neovim configuration, run:
+
+```bash
+nvim +checkhealth
+```
+
+This will run diagnostics for all installed plugins and Neovim core functionality.
+
+### Known Issues & Fixes
+
+This section documents issues from the last health check and their resolutions.
+
+#### 1. **snacks.nvim Lazy-Loading & Priority** ✅ FIXED
+
+**Issue**: `snacks.nvim` should not be lazy-loaded and should have a priority of 1000 or higher.
+
+**Status**: Fixed in `lua/plugins/opencode.lua`
+
+**Solution**:
+- Updated snacks.nvim dependency to include `lazy = false` and `priority = 1000`
+- This ensures snacks.nvim loads early and is not deferred
+- **Note**: There is a remaining error in snacks' healthcheck itself (not related to our config). This is a bug in snacks.nvim and doesn't affect functionality.
+
+#### 2. **Missing Node.js neovim Module** ✅ FIXED
+
+**Issue**: Python 3 provider couldn't find the `neovim` npm package.
+
+**Status**: Fixed
+
+**Solution**:
+- Installed `neovim` npm package locally: `npm install --no-save neovim --prefix ~/.local`
+- This provides Python-to-Neovim integration if needed
+
+#### 3. **Clipboard Support** ⚠️ REQUIRES MANUAL INSTALLATION
+
+**Issue**: No clipboard tool found. Clipboard registers (`"+` and `"*`) will not work.
+
+**Status**: Needs installation
+
+**Solution** (choose one based on your display server):
+
+For X11:
+```bash
+sudo pacman -S xclip
+# or
+sudo pacman -S xsel
+```
+
+For Wayland:
+```bash
+sudo pacman -S wl-clipboard
+```
+
+#### 4. **lsof Executable Missing** ⚠️ REQUIRES MANUAL INSTALLATION
+
+**Issue**: `lsof` executable not found in `$PATH`, needed by opencode.nvim for better port detection.
+
+**Status**: Needs installation
+
+**Solution**:
+```bash
+sudo pacman -S lsof
+```
+
+**Alternative**: You can set `vim.g.opencode_opts.port` in your config to avoid this requirement.
+
+#### 5. **Lua 5.1 for luarocks** ⚠️ OPTIONAL
+
+**Issue**: luarocks expects Lua 5.1 but found Lua 5.4.8.
+
+**Status**: Not critical (no plugins currently require luarocks)
+
+**Solution** (if needed):
+```bash
+sudo pacman -S lua51
+```
+
+#### 6. **opencode Version** ⚠️ NOTE
+
+**Issue**: opencode CLI version (1.1.2) patch version differs from latest tested (1.0.60).
+
+**Status**: Informational
+
+**Note**: You may want to update opencode CLI:
+```bash
+opencode update
+# or reinstall from https://github.com/anomalyco/opencode
+```
+
+#### 7. **Optional Providers** ℹ️ INFORMATIONAL
+
+These are not critical but can enhance functionality:
+
+- **Kitty Terminal**: Set `KITTY_LISTEN_ON` environment variable to enable kitty integration
+- **Wezterm Terminal**: Install wezterm: `sudo pacman -S wezterm`
+- **Tmux**: Install tmux: `sudo pacman -S tmux`
+
+#### 8. **Optional Providers - Ruby & Perl** ℹ️ INFORMATIONAL
+
+These are optional providers:
+
+**Ruby provider**: `ruby` and `gem` must be in `$PATH`
+**Perl provider**: `Neovim::Ext` cpan module is not installed
+
+These are entirely optional and only needed if you work with Ruby or Perl.
+
+### Resolving Issues
+
+To automatically fix most critical issues, run:
+
+```bash
+# Install clipboard support (choose based on your environment)
+sudo pacman -S wl-clipboard  # For Wayland
+# or
+sudo pacman -S xclip         # For X11
+
+# Install lsof for opencode
+sudo pacman -S lsof
+```
+
+After installing packages, restart Neovim and run `:checkhealth` again to verify.
 
 ---
 
