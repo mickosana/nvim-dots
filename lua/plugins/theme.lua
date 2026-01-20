@@ -1,0 +1,1 @@
+/home/lokithagod/.config/omarchy/current/theme/neovim.lua

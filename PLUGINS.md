@@ -4,81 +4,68 @@ This document summarizes the plugins configured in your Neovim setup, how to use
 
 ## Notes
 - Leader-based mappings below use your current `<leader>` (as configured in your options).
-- 
-- Your configuration includes a comprehensive setup for both development workflows and AI assistance.
+- This is a minimal configuration with most LazyVim default keybindings removed.
+- Only window manager navigation and OpenCode keybindings are preserved.
 
 ## Plugins
 
-### GitHub Copilot Integration
+### AI Assistant Integration
 
-#### GitHub Copilot: zbirenbaum/copilot.lua
-- Purpose: GitHub Copilot integration for code completion.
-- Status: Suggestions and panel disabled (handled by CopilotChat instead).
-- Commands:
-  - `:Copilot setup` to authenticate
-  - `:Copilot status` to check connection/user
+#### OpenCode: NickvanDyke/opencode.nvim
+- Purpose: AI-powered coding assistant integrated directly into Neovim
+- Dependencies: `snacks.nvim` (for input, picker, and terminal)
 - Configuration:
-  - `suggestion.enabled = false`
-  - `panel.enabled = false`
-
-#### Copilot Chat: CopilotC-Nvim/CopilotChat.nvim
-- Purpose: Advanced AI chat interface with multiple modes and model selection.
-- Dependencies: `zbirenbaum/copilot.lua`, `nvim-lua/plenary.nvim`
-- Configuration:
-  - Default model: `gpt-4o`
-  - Window layout: vertical, 50% width
-  - Context: buffer (automatically includes current buffer)
-
-##### Available Models
-- `gpt-4o` (Default)
-- `claude-3.5-sonnet`
-- `claude-3.7-sonnet` 
-- `claude-4-sonnet`
-- `gemini-2.5-pro`
-- `o3-mini`
+  - Custom contexts that only include files within current working directory
+  - Contexts available: `@this`, `@buffer`, `@buffers`, `@visible`, `@diagnostics`, `@quickfix`, `@diff`, `@grapple`, `@cwd`
+  - Auto-read enabled for file reloading
 
 ##### Key Mappings
 
 **Normal Mode:**
-- `<leader>cc`: **Ask Mode** - Read-only chat with full buffer context, provides suggestions and analysis
-- `<leader>cca`: **Agent Mode** - Ask with file manipulation capabilities (includes model selection)
-- `<leader>cce`: **Agent Mode** - Edit current buffer with AI assistance (includes model selection)
-- `<leader>cm`: Select AI model
+- `<leader>oa` - Ask OpenCode with `@this` context (auto-submit)
+- `<leader>ox` - Execute OpenCode action (select from available actions)
+- `<leader>oo` - Toggle OpenCode window
+- `<leader>or` - Add range to OpenCode with `@this` context
+- `<leader>ol` - Add current line to OpenCode with `@this` context
+- `<leader>ou` - Scroll OpenCode session half page up
+- `<leader>od` - Scroll OpenCode session half page down
 
 **Visual Mode:**
-- `<leader>cc`: Ask about selected code (read-only mode)
-- `<leader>cca`: Agent ask about selection (with file manipulation capabilities)
+- `<leader>or` - Add selected range to OpenCode with `@this` context
 
-##### Chat Modes
+**Terminal Mode:**
+- `<leader>oo` - Toggle OpenCode window
 
-**Ask Mode (`<leader>cc`)**
-- **Purpose**: Read-only analysis and suggestions
-- **Features**: 
-  - Can see entire buffer content
-  - Provides suggestions, analysis, and recommendations
-  - No file modification capabilities
-  - No model selection (uses default)
-  - Contextual suggestions based on your code
+##### Context Types
 
-**Agent Mode (`<leader>cca`, `<leader>cce`)**
-- **Purpose**: Interactive file editing and manipulation
-- **Features**:
-  - Model selection dialog
-  - Can modify files directly
-  - Advanced action menu with options:
-    - ✅ Apply changes
-    - ❌ Cancel
-    - 🔍 Show diff preview (git-style)
-    - ✏️ Edit prompt and retry
-  - Professional diff preview with complete file comparison
-  - Aggressive metadata stripping for clean code output
+OpenCode supports various context types to scope your requests:
 
-##### Commands
-- `:CopilotChat` - Open ask mode chat
-- `:CopilotChatAsk [prompt]` - Ask mode with optional prompt
-- `:CopilotEditBuffer [prompt]` - Agent mode buffer editing
-- `:CopilotAgentAsk [prompt]` - Agent mode asking
-- `:CopilotModel` - Select AI model
+- `@this` - Current selection or line
+- `@buffer` - Current buffer (only if within CWD)
+- `@buffers` - All loaded buffers (only those within CWD)
+- `@visible` - All visible windows (only those within CWD)
+- `@diagnostics` - Current diagnostics
+- `@quickfix` - Quickfix list items
+- `@diff` - Git diff for current directory
+- `@grapple` - Grapple tags
+- `@cwd` - Current working directory info
+
+##### Usage Examples
+
+1. **Quick Ask**: Press `<leader>oa` to quickly ask about current context
+2. **Action Menu**: Press `<leader>ox` to see and execute available OpenCode actions
+3. **Toggle Chat**: Press `<leader>oo` to open/close the OpenCode window
+4. **Add Context**: Select code and press `<leader>or` to add it to OpenCode
+5. **Line Context**: Press `<leader>ol` to add the current line to OpenCode
+
+### Window Navigation
+
+**Note**: Most LazyVim default keybindings have been removed. Only window manager navigation keybindings are preserved:
+
+- `<C-h>` - Go to left window
+- `<C-j>` - Go to lower window
+- `<C-k>` - Go to upper window
+- `<C-l>` - Go to right window
 
 ### File Navigation and Project Management
 
@@ -101,11 +88,6 @@ This document summarizes the plugins configured in your Neovim setup, how to use
 - Custom Functions:
   - Context-aware searches that use current buffer's directory
   - Directory-scoped file finding and text searches
-- Key Mappings:
-  - `<leader>ff`: Find files in current buffer's directory
-  - `<leader>fg`: Live grep in current buffer's directory
-  - `<leader>fs`: Grep current word in buffer's directory
-  - `<leader>fF`: Find files globally (workspace-wide)
 
 ### Code Enhancement
 
@@ -162,33 +144,37 @@ This document summarizes the plugins configured in your Neovim setup, how to use
 
 ## Usage Examples
 
-### Copilot AI Assistant
+### OpenCode AI Assistant
 
-#### Basic Ask Mode
-1. Open any file with code
-2. Press `<leader>cc`
-3. Ask questions like:
-   - "How can I improve this code?"
-   - "Are there any bugs or issues?"
-   - "Explain what this function does"
-   - "Suggest optimizations"
+1. **Quick Questions**: 
+   - Place cursor on code you want to ask about
+   - Press `<leader>oa` to ask OpenCode (uses @this context automatically)
 
-#### Agent Mode for Editing
-1. Open any file you want to modify
-2. Press `<leader>cce`
-3. Select your preferred AI model
-4. Describe the changes you want
-5. Review the diff preview
-6. Apply or refine the changes
+2. **Add Code Context**:
+   - Select code in visual mode
+   - Press `<leader>or` to add it to OpenCode chat
+   - Or press `<leader>ol` to add current line
+
+3. **Toggle OpenCode**:
+   - Press `<leader>oo` to open/close OpenCode window
+   - Works in both normal and terminal mode
+
+4. **Execute Actions**:
+   - Press `<leader>ox` to see available OpenCode actions
+   - Select from the menu to execute
+
+### Window Navigation
+
+- Use `<C-h>`, `<C-j>`, `<C-k>`, `<C-l>` to navigate between Neovim windows
+- These keybindings work seamlessly with your window manager
 
 ### File Navigation
-1. Use Neo-tree (`<leader>e` or `:Neotree`) for file browser
-2. Use Telescope:
-   - `<leader>ff` to find files in current directory
-   - `<leader>fg` to search text in current directory
-   - `<leader>fs` to find occurrences of current word
+
+1. Use Neo-tree for file browser navigation
+2. Use Telescope for fuzzy finding files and text search
 
 ### Code Quality
+
 1. Treesitter provides automatic syntax highlighting
 2. Rainbow delimiters help visualize nested code blocks
 3. Linters run automatically on file save, showing errors and warnings
@@ -196,14 +182,13 @@ This document summarizes the plugins configured in your Neovim setup, how to use
 
 ## Troubleshooting
 
-### Copilot Issues
-- **Copilot not authenticated**: Run `:Copilot setup`, then `:Copilot status`
-- **Empty responses**: Check your internet connection and Copilot authentication
-- **Model selection not working**: Ensure you're using agent mode (`<leader>cca` or `<leader>cce`)
-- **Changes not applying**: Review the action menu options and ensure you select "Apply changes"
+### OpenCode Issues
+- **OpenCode not responding**: Check that OpenCode is properly installed and running
+- **Context not loading**: Ensure your files are within the current working directory
+- **Commands not working**: Verify Snacks.nvim is properly loaded
 
 ### Plugin Problems
-- **Neo-tree not showing files**: Check for permission issues or try `:Neotree refresh`
+- **Neo-tree not showing files**: Check for permission issues or try refreshing
 - **Telescope not finding files**: Ensure you're in a project directory with readable files
 - **Treesitter highlighting issues**: Run `:TSUpdate` to update parsers
 - **Linter not working**: Verify the linter is installed on your system (e.g., `eslint`, `flake8`)
